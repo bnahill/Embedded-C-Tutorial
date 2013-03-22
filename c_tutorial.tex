@@ -679,7 +679,7 @@ Peripherals generally present a memory-based interface to the CPU consisting of 
 
 
 \begin{lstlisting}[label=lst-gpio-map,caption=Memory-mapped interface for GPIO port]
-typedef struct {
+typedef volatile struct {
 	uint32_t CONF;
 	uint8_t padding1[2];
 	uint16_t OUTPUT;
