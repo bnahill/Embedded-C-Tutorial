@@ -38,6 +38,9 @@ captionpos=b}
 \author{Ben Nahill}
 \begin{document}
 \maketitle
+\thispagestyle{empty}
+\clearpage
+
 \tableofcontents
 \thispagestyle{empty}
 \clearpage
@@ -666,7 +669,46 @@ For most operations, a \texttt{break} statement is required at the end of each c
 
 Most compilers will throw a warning or error if you don't provide complete coverage of all cases. With integers, this usually means that you provide a \texttt{default} but with \texttt{enum} you can get away with just coverage of the defined values. Since switches are often optimized, be careful in those cases to be sure that you provide a valid \texttt{enum}.
 
+
+
+\section{Memory}
+Memory is a far more important concept to grasp for embedded systems than for environments where the developer is distant from the bare metal. This is because microprocessors and microcontrollers generally deal with peripherals, that is anything outside the CPU core, through memory-mapped buses. Since there is no instruction to write to a simple IO pin, there is an address in memory dedicated to handling that instead. This section intends to expose a few tricks for memory management somewhat specific to embedded systems.
+
+\subsection*{Memory-mapping Peripherals}
+Peripherals generally present a memory-based interface to the CPU consisting of a handful of \emph{registers}. Generally, for a given peripheral, they are in contiguous memory. Vendors will often provide macros for access to these areas but we can go further with something like the following, presented for a hypothetical 16-bit General Purpose IO (GPIO) peripheral:
+
+
+\begin{lstlisting}[label=lst-gpio-map,caption=Memory-mapped interface for GPIO port]
+typedef struct {
+	uint32_t CONF;
+	uint8_t padding1[2];
+	uint16_t OUTPUT;
+	uint8_t padding2[2];
+	uint16_t INPUT;
+} gpio_t;
+
+// Define a pointer to a specific instance of this, referred to by its base address
+static gpio_t * const GPIOA = (gpio_t *) 0x40012000;
+\end{lstlisting}
+
+
 \section{Libraries}
+
+Libraries are simply chunks of reusable code that are compiled independently from your application and then are passed to the linker for use in your application. In general, it is very important when linking with libraries that all bodies of code being merged have common compilation settings for anything that might affect calling or stack management conventions (such as FPU presence on ARM). Libraries come in a few flavors, some of which are more applicable to specific applications:
+
+\begin{description}
+\item[Static] These are simply an archive of object files. Rather than recompile them every time, you will just link them in your project.
+These will generally come with a set of headers indicating what functions and variables it exports. As the name suggests, the linking is static and the portions of the library that you use will be placed inside your executable. Extensions for these are .a (for archive) using GNU tools and .lib using Kiel and some others.
+
+\item[Dynamic (or shared)] These are libraries which are run time linked, which is why they more-or-less don't exist in low-power embedded systems. This can be convenient if you want to selectively include certain libraries at run time. Another benefit of dynamic libraries is that they can be shared between several applications. File extensions are .so (or .so.$version$) in Unix systems and .dll in Windows systems.
+
+\item[Just Code] Libraries (especially of the open-source persuasion) will often come with the source for you to compile. This brings about the benefit of being able to compile it however you please and even modify it. Along with that comes the burden of having to configure your project to compile it.
+
+\end{description}
+
+
+
+
 
 \section{Conventions}
 
